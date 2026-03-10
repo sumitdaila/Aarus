@@ -304,59 +304,77 @@
             padding: 0 10px;
         }
 
-        /* Fullscreen Video Modal */
-        .fullscreen-video-modal {
+        /* Video Modal - No auto fullscreen */
+        .video-modal {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: black;
+            background: rgba(0, 0, 0, 0.95);
             z-index: 2000;
             display: flex;
             align-items: center;
             justify-content: center;
+            padding: 20px;
         }
 
-        .fullscreen-video-modal video {
+        .video-container {
+            position: relative;
+            width: 90%;
+            max-width: 1000px;
+            max-height: 90vh;
+            background: #000;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .video-container video {
             width: 100%;
-            height: 100%;
-            object-fit: contain;
+            height: auto;
+            max-height: 80vh;
+            display: block;
         }
 
-        .close-fullscreen {
+        .video-header {
             position: absolute;
-            top: clamp(10px, 3vw, 20px);
-            right: clamp(10px, 3vw, 20px);
-            background: rgba(255, 51, 102, 0.8);
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 15px 20px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 2001;
+        }
+
+        .video-title {
+            color: white;
+            font-family: 'Great Vibes', cursive;
+            font-size: clamp(1.3rem, 4vw, 1.8rem);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .close-video-btn {
+            background: rgba(255, 51, 102, 0.9);
             color: white;
             border: none;
-            width: clamp(40px, 8vw, 50px);
-            height: clamp(40px, 8vw, 50px);
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             cursor: pointer;
-            font-size: clamp(1.2rem, 4vw, 1.5rem);
-            z-index: 2001;
+            font-size: 1.2rem;
             transition: all 0.3s;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
-        .close-fullscreen:hover {
+        .close-video-btn:hover {
             background: #ff3366;
             transform: rotate(90deg);
-        }
-
-        .video-title {
-            position: absolute;
-            top: clamp(10px, 3vw, 20px);
-            left: clamp(10px, 3vw, 20px);
-            color: white;
-            font-family: 'Great Vibes', cursive;
-            font-size: clamp(1.5rem, 5vw, 2rem);
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-            z-index: 2001;
         }
 
         /* Hidden Class */
@@ -402,6 +420,10 @@
             .love-counter {
                 flex-direction: column;
                 text-align: center;
+            }
+            
+            .video-container {
+                width: 95%;
             }
         }
     </style>
@@ -459,10 +481,10 @@
             "I love you not only for who you are,<br>
             but for who I am when I'm with you"
         </div>
-        
+
         <!-- Button Container -->
         <div class="button-container">
-            <button class="romantic-btn special-btn" onclick="playSpecialVideo()">
+            <button class="romantic-btn special-btn" id="specialBtn">
                 <i class="fas fa-star"></i> Something More Special
             </button>
             <button class="romantic-btn close-btn" onclick="closePage()">
@@ -476,153 +498,181 @@
         </div>
     </div>
 
-    <!-- Fullscreen Video Modal for Special Video -->
-    <div id="specialVideoModal" class="fullscreen-video-modal hidden">
-        <div class="video-title">Something Special For Special One❤️</div>
-        <button class="close-fullscreen" onclick="closeSpecialVideo()">
-            <i class="fas fa-times"></i>
-        </button>
-        <video id="specialVideo" controls autoplay playsinline>
-            <source src="love-video.mp4" type="video/mp4">
-        </video>
+    <!-- Video Modal (No Auto Fullscreen) -->
+    <div id="videoModal" class="video-modal hidden">
+        <div class="video-container">
+            <div class="video-header">
+                <span class="video-title">Something Special For Special One ❤️</span>
+                <button class="close-video-btn" id="closeVideoBtn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <video id="specialVideo" controls playsinline>
+                <source src="love-video.mp4" type="video/mp4">
+            </video>
+        </div>
     </div>
 
     <script>
-        const romanticAudio = document.getElementById('romanticAudio');
-        const specialVideoModal = document.getElementById('specialVideoModal');
-        const specialVideo = document.getElementById('specialVideo');
-        
-        // Create floating hearts and kisses
-        function createFloatingElements() {
-            const container = document.getElementById('floating-container');
-            
-            const isKiss = Math.random() > 0.7;
-            
-            const element = document.createElement('div');
-            element.className = 'floating-element';
-            
-            if (isKiss) {
-                const kisses = ['😘', '💋', '😚', '😗', '😙'];
-                element.innerHTML = kisses[Math.floor(Math.random() * kisses.length)];
-                element.style.color = '#ff6b9d';
-            } else {
-                const hearts = ['❤️', '💕', '💖', '💗', '💓', '💘'];
-                element.innerHTML = hearts[Math.floor(Math.random() * hearts.length)];
-                element.style.color = '#ff3366';
-            }
-            
-            element.style.left = Math.random() * 100 + 'vw';
-            element.style.animationDuration = Math.random() * 3 + 3 + 's';
-            element.style.fontSize = Math.random() * 30 + 15 + 'px';
-            element.style.opacity = Math.random() * 0.7 + 0.3;
-            container.appendChild(element);
+        (function() {
+            const romanticAudio = document.getElementById('romanticAudio');
+            const videoModal = document.getElementById('videoModal');
+            const specialVideo = document.getElementById('specialVideo');
+            const specialBtn = document.getElementById('specialBtn');
+            const closeVideoBtn = document.getElementById('closeVideoBtn');
 
-            if (Math.random() > 0.8) {
-                const petal = document.createElement('div');
-                petal.className = 'petal';
-                petal.innerHTML = '🌸';
-                petal.style.left = Math.random() * 100 + 'vw';
-                petal.style.animationDuration = Math.random() * 4 + 4 + 's';
-                petal.style.fontSize = Math.random() * 20 + 10 + 'px';
-                container.appendChild(petal);
-                setTimeout(() => petal.remove(), 10000);
+            // Helper: play both video and audio together
+            function playTogether() {
+                romanticAudio.currentTime = 0;
+                specialVideo.currentTime = 0;
+                // Play both
+                romanticAudio.play().catch(e => console.log('Audio play failed:', e));
+                specialVideo.play().catch(e => console.log('Video play failed:', e));
             }
 
-            setTimeout(() => element.remove(), 6000);
-        }
-
-        setInterval(createFloatingElements, 150);
-
-        function playSpecialVideo() {
-            // Play romantic audio
-            romanticAudio.play().catch(() => {});
-            
-            // Show modal
-            specialVideoModal.classList.remove('hidden');
-            
-            // Play video
-            specialVideo.play().catch(() => {});
-            
-            // Request fullscreen
-            if (specialVideoModal.requestFullscreen) {
-                specialVideoModal.requestFullscreen();
-            } else if (specialVideoModal.webkitRequestFullscreen) {
-                specialVideoModal.webkitRequestFullscreen();
-            } else if (specialVideoModal.msRequestFullscreen) {
-                specialVideoModal.msRequestFullscreen();
+            // Helper: pause both video and audio
+            function pauseTogether() {
+                romanticAudio.pause();
+                specialVideo.pause();
             }
-        }
 
-        function closeSpecialVideo() {
-            // Pause video and audio
-            specialVideo.pause();
-            specialVideo.currentTime = 0;
-            romanticAudio.pause();
-            romanticAudio.currentTime = 0;
-            
-            // Exit fullscreen
-            if (document.exitFullscreen) {
-                document.exitFullscreen();
-            } else if (document.webkitExitFullscreen) {
-                document.webkitExitFullscreen();
-            } else if (document.msExitFullscreen) {
-                document.msExitFullscreen();
+            // Helper: stop both (pause + reset time)
+            function stopTogether() {
+                romanticAudio.pause();
+                romanticAudio.currentTime = 0;
+                specialVideo.pause();
+                specialVideo.currentTime = 0;
             }
-            
-            // Hide modal
-            specialVideoModal.classList.add('hidden');
-        }
 
-        function closePage() {
-            if (confirm('Close this romantic page?')) {
-                window.close();
+            // Open modal and start playing together (NO AUTO FULLSCREEN)
+            function openVideoModal() {
+                // Show modal
+                videoModal.classList.remove('hidden');
+                
+                // Start audio and video together
+                playTogether();
             }
-        }
 
-        // Handle video error
-        specialVideo.addEventListener('error', function() {
-            alert('Special video not found. Please add "special-video.mp4" to the same folder.');
-        });
+            // Close modal and stop everything
+            function closeVideoModal() {
+                // Pause audio and video
+                pauseTogether();
+                // Reset times
+                romanticAudio.currentTime = 0;
+                specialVideo.currentTime = 0;
 
-        // Initial floating elements
-        for(let i = 0; i < 20; i++) {
-            setTimeout(createFloatingElements, i * 100);
-        }
-
-        // Rotating quotes
-        const messages = [
-            "You're my today and all my tomorrows",
-            "I love you more than pizza",
-            "You're the peanut butter to my jelly",
-            "I'd choose you in every lifetime",
-            "You're my favorite notification",
-            "Every love story is beautiful, but ours is my favorite",
-            "You make my heart smile"
-        ];
-        
-        setInterval(() => {
-            const quote = document.querySelector('.quote');
-            if (quote) {
-                quote.style.opacity = '0';
-                setTimeout(() => {
-                    quote.innerHTML = `💕 ${messages[Math.floor(Math.random() * messages.length)]} 💕`;
-                    quote.style.opacity = '1';
-                }, 500);
+                // Hide modal
+                videoModal.classList.add('hidden');
             }
-        }, 4000);
 
-        // Handle fullscreen change
-        document.addEventListener('fullscreenchange', function() {
-            if (!document.fullscreenElement && !specialVideoModal.classList.contains('hidden')) {
-                closeSpecialVideo();
-            }
-        });
+            // Event listeners for buttons
+            specialBtn.addEventListener('click', function() {
+                openVideoModal();
+            });
 
-        document.addEventListener('webkitfullscreenchange', function() {
-            if (!document.webkitFullscreenElement && !specialVideoModal.classList.contains('hidden')) {
-                closeSpecialVideo();
+            closeVideoBtn.addEventListener('click', function() {
+                closeVideoModal();
+            });
+
+            // Close modal when clicking outside the video container (on the dark background)
+            videoModal.addEventListener('click', function(e) {
+                if (e.target === videoModal) {
+                    closeVideoModal();
+                }
+            });
+
+            // Floating elements creator
+            function createFloatingElements() {
+                const container = document.getElementById('floating-container');
+                const isKiss = Math.random() > 0.7;
+
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+
+                if (isKiss) {
+                    const kisses = ['😘', '💋', '😚', '😗', '😙'];
+                    element.innerHTML = kisses[Math.floor(Math.random() * kisses.length)];
+                    element.style.color = '#ff6b9d';
+                } else {
+                    const hearts = ['❤️', '💕', '💖', '💗', '💓', '💘'];
+                    element.innerHTML = hearts[Math.floor(Math.random() * hearts.length)];
+                    element.style.color = '#ff3366';
+                }
+
+                element.style.left = Math.random() * 100 + 'vw';
+                element.style.animationDuration = Math.random() * 3 + 3 + 's';
+                element.style.fontSize = Math.random() * 30 + 15 + 'px';
+                element.style.opacity = Math.random() * 0.7 + 0.3;
+                container.appendChild(element);
+
+                if (Math.random() > 0.8) {
+                    const petal = document.createElement('div');
+                    petal.className = 'petal';
+                    petal.innerHTML = '🌸';
+                    petal.style.left = Math.random() * 100 + 'vw';
+                    petal.style.animationDuration = Math.random() * 4 + 4 + 's';
+                    petal.style.fontSize = Math.random() * 20 + 10 + 'px';
+                    container.appendChild(petal);
+                    setTimeout(() => petal.remove(), 10000);
+                }
+
+                setTimeout(() => element.remove(), 6000);
             }
-        });
+
+            setInterval(createFloatingElements, 150);
+
+            // close page
+            window.closePage = function() {
+                if (confirm('Close this romantic page?')) {
+                    window.close();
+                }
+            };
+
+            // Video error handling
+            specialVideo.addEventListener('error', function() {
+                alert('Special video not found. Please add "love-video.mp4" to the same folder.');
+            });
+
+            // Initialize floating elements
+            for(let i = 0; i < 20; i++) {
+                setTimeout(createFloatingElements, i * 100);
+            }
+
+            // Rotating quotes
+            const messages = [
+                "You're my today and all my tomorrows",
+                "I love you more than pizza",
+                "You're the peanut butter to my jelly",
+                "I'd choose you in every lifetime",
+                "You're my favorite notification",
+                "Every love story is beautiful, but ours is my favorite",
+                "You make my heart smile"
+            ];
+
+            setInterval(() => {
+                const quote = document.querySelector('.quote');
+                if (quote) {
+                    quote.style.opacity = '0';
+                    setTimeout(() => {
+                        quote.innerHTML = `💕 ${messages[Math.floor(Math.random() * messages.length)]} 💕`;
+                        quote.style.opacity = '1';
+                    }, 500);
+                }
+            }, 4000);
+
+            // Listen for pause event on video to also pause song
+            specialVideo.addEventListener('pause', function() {
+                romanticAudio.pause();
+            });
+
+            // Listen for play event on video to resume both
+            specialVideo.addEventListener('play', function() {
+                if (!videoModal.classList.contains('hidden')) {
+                    romanticAudio.play().catch(e => {});
+                }
+            });
+
+        })();
     </script>
 </body>
 </html>
